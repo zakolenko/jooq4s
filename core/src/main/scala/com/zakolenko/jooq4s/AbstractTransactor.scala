@@ -2,11 +2,11 @@ package com.zakolenko.jooq4s
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import org.jooq.scalaextensions.Conversions._
-import org.jooq.{DSLContext, Record, ResultQuery}
+import org.jooq.{DSLContext, Query, Record, ResultQuery}
 
 import scala.collection.JavaConverters._
 
-private[jooq4s] class AbstractTransactor[F[_]: Sync: ContextShift](
+class AbstractTransactor[F[_]: Sync: ContextShift](
   dsl: DSLContext,
   blocker: Blocker
 ) extends Transactor[F] {
@@ -23,6 +23,10 @@ private[jooq4s] class AbstractTransactor[F[_]: Sync: ContextShift](
     fs2.Stream
       .resource(Resource.fromAutoCloseable(blocker.delay(dsl.fetchLazy(rq))))
       .flatMap(cursor => fs2.Stream.fromBlockingIterator(blocker, cursor.iterator.asScala))
+  }
+
+  override def execute(query: Query): F[Int] = {
+    withDslF(_.execute(query))
   }
 
   protected def withDslF[T](f: DSLContext => T): F[T] = {

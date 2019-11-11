@@ -3,7 +3,7 @@ package com.zakolenko.jooq4s
 import cats.effect.{Blocker, ContextShift, Sync}
 import javax.sql.DataSource
 import org.jooq.impl.DSL
-import org.jooq.{Record, ResultQuery, SQLDialect}
+import org.jooq.{Query, Record, ResultQuery, SQLDialect}
 
 trait Transactor[F[_]] {
 
@@ -12,6 +12,8 @@ trait Transactor[F[_]] {
   def option[R <: Record](rq: ResultQuery[R]): F[Option[R]]
 
   def stream[R <: Record](rq: ResultQuery[R]): fs2.Stream[F, R]
+
+  def execute(query: Query): F[Int]
 }
 
 object Transactor {
