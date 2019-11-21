@@ -2,9 +2,10 @@ package com.zakolenko.jooq4s
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
 import org.jooq.scalaextensions.Conversions._
-import org.jooq.{DSLContext, Query => JQuery, Record, ResultQuery => JResultQuery}
+import org.jooq.{Cursor, DSLContext, Record, Query => JQuery, ResultQuery => JResultQuery}
 
 import scala.collection.JavaConverters._
+import scala.collection.generic.CanBuildFrom
 
 class AbstractTransactor[F[_]: Sync: ContextShift](
   dsl: DSLContext,
@@ -17,6 +18,21 @@ class AbstractTransactor[F[_]: Sync: ContextShift](
 
   override def option[R <: Record](rq: JResultQuery[R]): F[Option[R]] = {
     withDslF(_.fetchOneOption(rq))
+  }
+
+  def collect[R <: Record, CC[_]](rq: JResultQuery[R])(implicit cbf: CanBuildFrom[Nothing, R, CC[R]]): F[CC[R]] = {
+    val acquire: F[Cursor[R]] = blocker.delay(dsl.fetchLazy(rq))
+    val use: Cursor[R] => F[CC[R]] = { cursor =>
+      blocker.delay {
+        val acc = cbf.apply()
+        val iter = cursor.iterator()
+        while (iter.hasNext) acc += iter.next
+        acc.result
+      }
+    }
+    val release: Cursor[R] => F[Unit] = c => blocker.delay(c.close())
+
+    Sync[F].bracket(acquire)(use)(release)
   }
 
   override def stream[R <: Record](rq: JResultQuery[R]): fs2.Stream[F, R] = {
