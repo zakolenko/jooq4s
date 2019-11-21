@@ -6,6 +6,7 @@ import org.jooq.{Cursor, DSLContext, Record, Query => JQuery, ResultQuery => JRe
 
 import scala.collection.JavaConverters._
 import scala.collection.generic.CanBuildFrom
+import scala.collection.mutable
 
 class AbstractTransactor[F[_]: Sync: ContextShift](
   dsl: DSLContext,
@@ -20,12 +21,12 @@ class AbstractTransactor[F[_]: Sync: ContextShift](
     withDslF(_.fetchOneOption(rq))
   }
 
-  def collect[R <: Record, CC[_]](rq: JResultQuery[R])(implicit cbf: CanBuildFrom[Nothing, R, CC[R]]): F[CC[R]] = {
+  override def collect[R <: Record, CC[_]](rq: JResultQuery[R])(implicit cbf: CanBuildFrom[Nothing, R, CC[R]]): F[CC[R]] = {
     val acquire: F[Cursor[R]] = blocker.delay(dsl.fetchLazy(rq))
     val use: Cursor[R] => F[CC[R]] = { cursor =>
       blocker.delay {
-        val acc = cbf.apply()
-        val iter = cursor.iterator()
+        val acc: mutable.Builder[R, CC[R]] = cbf.apply()
+        val iter: java.util.Iterator[R] = cursor.iterator
         while (iter.hasNext) acc += iter.next
         acc.result
       }
