@@ -15,7 +15,7 @@ trait Transactor[F[_]] {
 
   def collect[R <: Record, CC[_]](rq: JResultQuery[R])(implicit cbf: CanBuildFrom[Nothing, R, CC[R]]): F[CC[R]]
 
-  def stream[R <: Record](rq: JResultQuery[R]): fs2.Stream[F, R]
+  def stream[R <: Record](rq: JResultQuery[R], batch: Int): fs2.Stream[F, R]
 
   def execute(query: JQuery): F[Int]
 }

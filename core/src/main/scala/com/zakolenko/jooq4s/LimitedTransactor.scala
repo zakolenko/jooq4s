@@ -23,10 +23,10 @@ class LimitedTransactor[F[_]](
     semaphore.withPermit(underlying.collect(rq))
   }
 
-  override def stream[R <: Record](rq: JResultQuery[R]): fs2.Stream[F, R] = {
+  override def stream[R <: Record](rq: JResultQuery[R], batch: Int): fs2.Stream[F, R] = {
     fs2.Stream
       .bracket(semaphore.acquire)(_ => semaphore.release)
-      .flatMap(_ => underlying.stream(rq))
+      .flatMap(_ => underlying.stream(rq, batch))
   }
 
   override def execute(query: JQuery): F[Int] = {

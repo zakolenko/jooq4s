@@ -1,12 +1,11 @@
 package com.zakolenko.jooq4s
 
 import cats.effect.{Blocker, ContextShift, Resource, Sync}
+import cats.implicits._
 import org.jooq.scalaextensions.Conversions._
 import org.jooq.{Cursor, DSLContext, Record, Query => JQuery, ResultQuery => JResultQuery}
 
-import scala.collection.JavaConverters._
 import scala.collection.generic.CanBuildFrom
-import scala.collection.mutable
 
 class AbstractTransactor[F[_]: Sync: ContextShift](
   dsl: DSLContext,
@@ -25,7 +24,7 @@ class AbstractTransactor[F[_]: Sync: ContextShift](
     val acquire: F[Cursor[R]] = blocker.delay(dsl.fetchLazy(rq))
     val use: Cursor[R] => F[CC[R]] = { cursor =>
       blocker.delay {
-        val acc: mutable.Builder[R, CC[R]] = cbf.apply()
+        val acc: collection.mutable.Builder[R, CC[R]] = cbf.apply()
         val iter: java.util.Iterator[R] = cursor.iterator
         while (iter.hasNext) acc += iter.next
         acc.result
@@ -36,10 +35,34 @@ class AbstractTransactor[F[_]: Sync: ContextShift](
     Sync[F].bracket(acquire)(use)(release)
   }
 
-  override def stream[R <: Record](rq: JResultQuery[R]): fs2.Stream[F, R] = {
+  override def stream[R <: Record](rq: JResultQuery[R], batch: Int = 512): fs2.Stream[F, R] = {
+    rq.fetchSize(batch)
+
     fs2.Stream
       .resource(Resource.fromAutoCloseable(blocker.delay(dsl.fetchLazy(rq))))
-      .flatMap(cursor => fs2.Stream.fromBlockingIterator(blocker, cursor.iterator.asScala))
+      .flatMap { cursor =>
+        val iter = cursor.iterator()
+
+        fs2.Stream.unfoldChunkEval(true) { shouldFetch =>
+          if (shouldFetch) {
+            blocker.delay {
+              var i = 0
+
+              val acc = collection.mutable.Buffer.newBuilder[R]
+              acc.sizeHint(batch)
+
+              while (i < batch && iter.hasNext) {
+                acc += iter.next
+                i += 1
+              }
+
+              (fs2.Chunk.buffer(acc.result), i == batch).some
+            }
+          } else {
+            Sync[F].pure(Option.empty[(fs2.Chunk[R], Boolean)])
+          }
+        }
+      }
   }
 
   override def execute(query: JQuery): F[Int] = {

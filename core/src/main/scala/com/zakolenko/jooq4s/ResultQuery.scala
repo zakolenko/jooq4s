@@ -10,7 +10,7 @@ object ResultQuery {
     def one[F[_]](tr: Transactor[F]): F[R] = tr.one(rq)
     def option[F[_]](tr: Transactor[F]): F[Option[R]] = tr.option(rq)
     def collectTo[CC[_]]: CollectTo[CC, R] = new CollectTo(rq)
-    def stream[F[_]](tr: Transactor[F]): fs2.Stream[F, R] = tr.stream(rq)
+    def stream[F[_]](batchSize: Int = 512)(tr: Transactor[F]): fs2.Stream[F, R] = tr.stream(rq, batchSize)
     def execute[F[_]](tr: Transactor[F]): F[Int] = tr.execute(rq)
   }
 
