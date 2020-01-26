@@ -1,8 +1,0 @@
-This is the API documentation for the [[https://zakolenko.github.io/jooq4s/ jooq4s]] library.
-
-Scala wrapper for jOOQ
-
-Links:
-
-- [[https://zakolenko.github.io/jooq4s/ Homepage]]
-- [[https://github.com/zakolenko/jooq4s GitHub repository]]
