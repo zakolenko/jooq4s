@@ -15,8 +15,13 @@
  * limitations under the License.
  */
 
-package com.zakolenko.jooq4s.syntax
+package jooq4s.util
 
-import com.zakolenko.jooq4s.Query
+import cats.effect.{Resource, Sync}
 
-trait QuerySyntax extends Query.ToQueryOps
+object Resources {
+
+  def make[F[_]: Sync, T](acquire: => T)(release: T => Unit): Resource[F, T] = {
+    Resource.make(Sync[F].delay(acquire))(t => Sync[F].delay(release(t)))
+  }
+}

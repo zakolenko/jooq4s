@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.zakolenko.jooq4s.syntax
+package jooq4s.syntax
 
 trait AllSyntax
   extends QuerySyntax

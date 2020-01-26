@@ -4,8 +4,8 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 // ---------------------------------------------------------------------------
 // Commands
 
-addCommandAlias("release", ";project root ;reload ;+test:compile ;unidoc ;+publishSigned ;sonatypeBundleRelease ;microsite/publishMicrosite")
-addCommandAlias("ci", ";project root ;reload ;+clean ;+test:compile ;+test ;unidoc ;site/makeMicrosite")
+addCommandAlias("release", ";project jooq4s ;reload ;+test:compile ;unidoc ;+publishSigned ;sonatypeBundleRelease ;microsite/publishMicrosite")
+addCommandAlias("ci", ";project jooq4s ;reload ;+clean ;+test:compile ;+test ;unidoc ;site/makeMicrosite")
 
 // ---------------------------------------------------------------------------
 // Dependencies

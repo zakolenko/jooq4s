@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package com.zakolenko.jooq4s
+package jooq4s
 
 import cats.effect.{Blocker, ContextShift, Sync}
 import javax.sql.DataSource

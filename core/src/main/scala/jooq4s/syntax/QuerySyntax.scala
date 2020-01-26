@@ -15,8 +15,8 @@
  * limitations under the License.
  */
 
-package com.zakolenko.jooq4s.syntax
+package jooq4s.syntax
 
-import com.zakolenko.jooq4s.ResultQuery
+import jooq4s.Query
 
-trait ResultQuerySyntax extends ResultQuery.ToResultQueryOps
+trait QuerySyntax extends Query.ToQueryOps

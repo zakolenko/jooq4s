@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 
-package com.zakolenko.jooq4s.hikari
+package jooq4s.hikari
 
 import cats.effect.concurrent.Semaphore
 import cats.effect.{Blocker, Concurrent, ContextShift, Resource, Sync}
 import cats.implicits._
-import com.zakolenko.jooq4s.util.{ExecutionContexts, Resources}
-import com.zakolenko.jooq4s.{LimitedTransactor, Transactor}
+import jooq4s.util.{ExecutionContexts, Resources}
+import jooq4s.{LimitedTransactor, Transactor}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import org.jooq.SQLDialect
 
